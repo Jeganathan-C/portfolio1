@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prime AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Lora:ital,wght@0,500;0,600;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--bg2:#0f0f0f;--s1:#1a1a1a;--s2:#212121;--s3:#2a2a2a;
+  --b1:#252525;--b2:#303030;--b3:#3a3a3a;
+  --t1:#f2f2f2;--t2:#999;--t3:#555;--t4:#333;
+  --prime:#e8935a;--prime2:#c97040;--glow:rgba(232,147,90,.18);
+  --claude:#e8a87c;--gemini:#7baaf7;--gpt:#4ade80;--search:#c084fc;
+  --r:14px;--sw:268px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Sora',system-ui,sans-serif;background:var(--bg);color:var(--t1);-webkit-font-smoothing:antialiased}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes bnc{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-8px);opacity:1}}
+
+/* ── AUTH ── */
+#auth{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.aw{width:100%;max-width:420px;padding:24px;animation:slideUp .5s ease}
+.al{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:36px}
+.am{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--prime),var(--prime2));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px var(--glow)}
+.am svg{width:22px;height:22px;stroke:#fff;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.aln{font-family:'Lora',serif;font-size:22px;font-weight:600;letter-spacing:-.04em}
+.aln em{color:var(--prime);font-style:italic}
+.ac{background:var(--bg2);border:1px solid var(--b1);border-radius:20px;padding:32px;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.atabs{display:flex;gap:2px;background:var(--s1);border-radius:10px;padding:3px;margin-bottom:24px}
+.atab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(--t3);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.atab.on{background:var(--s3);color:var(--t1)}
+.fi{margin-bottom:16px}
+.fi label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t2);margin-bottom:7px}
+.fi input{width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:12px 16px;font-family:inherit;font-size:14px;color:var(--t1);outline:none;transition:border-color .2s,box-shadow .2s}
+.fi input:focus{border-color:var(--prime);box-shadow:0 0 0 3px var(--glow)}
+.fi input::placeholder{color:var(--t4)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.abtn{width:100%;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--prime),var(--prime2));color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity .2s,transform .15s;box-shadow:0 4px 18px var(--glow)}
+.abtn:hover{opacity:.9}.abtn:active{transform:scale(.98)}
+.abtn.ghost{background:var(--s2);border:1px solid var(--b2);box-shadow:none;color:var(--t1)}
+.adiv{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--t3);font-size:12px}
+.adiv::before,.adiv::after{content:'';flex:1;height:1px;background:var(--b1)}
+.aerr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;font-size:13px;color:#f87171;margin-bottom:16px;display:none}
+.aerr.show{display:block}
+.astats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
+.asbox{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;text-align:center}
+.asn{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--prime)}
+.asl{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* ── APP ── */
+#app{display:none;height:100vh;flex-direction:row}
+#app.show{display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sw);background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;flex-shrink:0}
+.sbh{padding:18px 16px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b1)}
+.sbb{display:flex;align-items:center;gap:9px}
+.sbm{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--prime),var(--prime2));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sbm svg{width:16px;height:16px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.sbn{font-family:'Lora',serif;font-size:17px;font-weight:600;letter-spacing:-.03em}
+.sbn em{color:var(--prime);font-style:italic}
+.ib{width:28px;height:28px;border-radius:7px;border:none;background:transparent;color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.ib:hover{background:var(--s2);color:var(--t1)}
+.nchat{margin:12px;padding:10px 14px;background:var(--s2);border:1px solid var(--b2);border-radius:10px;color:var(--t1);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s,border-color .15s}
+.nchat:hover{background:var(--s3);border-color:var(--b3)}
+.nchat svg{color:var(--t3);flex-shrink:0}
+.sbsec{padding:14px 16px 6px;font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--t3)}
+.clist{flex:1;overflow-y:auto;padding:0 8px;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.ce{padding:9px 10px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:9px;transition:background .12s;margin-bottom:2px}
+.ce:hover,.ce.active{background:var(--s2)}
+.cedot{width:6px;height:6px;border-radius:50%;background:var(--b3);flex-shrink:0;transition:background .15s}
+.ce.active .cedot{background:var(--prime)}
+.cetxt{font-size:13px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;transition:color .12s}
+.ce:hover .cetxt,.ce.active .cetxt{color:var(--t1)}
+.cetime{font-size:10.5px;color:var(--t3);flex-shrink:0}
+.cedel{width:20px;height:20px;border-radius:5px;border:none;background:transparent;color:var(--t3);cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+.ce:hover .cedel{display:flex}
+.cedel:hover{background:rgba(239,68,68,.15);color:#f87171}
+.sbfoot{padding:12px;border-top:1px solid var(--b1)}
+.urow{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .15s;position:relative}
+.urow:hover{background:var(--s2)}
+.uav{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--prime),var(--prime2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.uinfo{flex:1;min-width:0}
+.uname{font-size:13px;color:var(--t1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uemail{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.umenu{position:absolute;bottom:54px;left:8px;right:8px;background:var(--s2);border:1px solid var(--b2);border-radius:12px;padding:6px;z-index:50;display:none;box-shadow:0 8px 28px rgba(0,0,0,.6)}
+.umenu.show{display:block;animation:fadeIn .15s ease}
+.mi{padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--t2);display:flex;align-items:center;gap:9px;transition:background .12s,color .12s}
+.mi:hover{background:var(--s3);color:var(--t1)}
+.mi.danger{color:#f87171}
+.mi.danger:hover{background:rgba(239,68,68,.1)}
+.mdiv{height:1px;background:var(--b1);margin:4px 0}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:52px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b1);flex-shrink:0;background:rgba(8,8,8,.9);backdrop-filter:blur(16px)}
+.tbl{display:flex;align-items:center;gap:10px}
+.ldot{width:8px;height:8px;border-radius:50%;background:#333;flex-shrink:0;transition:all .3s}
+.ldot.on{background:#22c55e;box-shadow:0 0 8px #22c55e70;animation:pls 2s ease infinite}
+.tbtitle{font-size:14px;font-weight:500;color:var(--t2)}
+.tbr{display:flex;align-items:center;gap:8px}
+.kbtn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;border:1px solid var(--b2);background:transparent;color:var(--prime);font-family:inherit;font-size:16px;cursor:pointer;transition:all .15s}
+.kbtn:hover{background:var(--glow);border-color:var(--prime)}
+.mtabs{display:flex;gap:2px;padding:10px 16px;border-bottom:1px solid var(--b1);flex-shrink:0;background:var(--bg2);overflow-x:auto;scrollbar-width:none}
+.mtab{display:flex;align-items:center;justify-content:center;padding:8px 18px;border-radius:9px;border:none;background:transparent;color:var(--t3);font-family:inherit;font-size:17px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s}
+.mtab:hover{background:var(--s2);color:var(--t2)}
+.mtab[data-m=claude].on{background:rgba(232,168,124,.12);color:var(--claude)}
+.mtab[data-m=gemini].on{background:rgba(123,170,247,.12);color:var(--gemini)}
+.mtab[data-m=chatgpt].on{background:rgba(74,222,128,.12);color:var(--gpt)}
+.mtab[data-m=search].on{background:rgba(192,132,252,.12);color:var(--search)}
+
+/* ── CHAT AREA ── */
+.ca{flex:1;overflow-y:auto;display:flex;flex-direction:column;scrollbar-width:thin;scrollbar-color:var(--b2) transparent}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 32px;text-align:center}
+.wicon{width:68px;height:68px;border-radius:22px;margin-bottom:24px;background:linear-gradient(135deg,rgba(232,147,90,.16),rgba(196,112,64,.06));border:1px solid rgba(232,147,90,.16);display:flex;align-items:center;justify-content:center;animation:fadeUp .6s ease both}
+.wicon svg{width:34px;height:34px;stroke:var(--prime);stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.whead{font-family:'Lora',serif;font-size:30px;font-weight:600;letter-spacing:-.04em;margin-bottom:10px;animation:fadeUp .6s .07s ease both}
+.whead em{color:var(--prime);font-style:italic}
+.wsub{font-size:14px;color:var(--t2);max-width:460px;line-height:1.7;animation:fadeUp .6s .13s ease both}
+.wchips{display:flex;gap:8px;margin:20px 0 28px;flex-wrap:wrap;justify-content:center;animation:fadeUp .6s .18s ease both}
+.wc{display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s}
+.wc:hover{transform:translateY(-1px);filter:brightness(1.2)}
+.wcc{color:var(--claude);border-color:rgba(232,168,124,.3);background:rgba(232,168,124,.07)}
+.wcg{color:var(--gemini);border-color:rgba(123,170,247,.3);background:rgba(123,170,247,.07)}
+.wcp{color:var(--gpt);border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.07)}
+.wcs{color:var(--search);border-color:rgba(192,132,252,.3);background:rgba(192,132,252,.07)}
+.sugs{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:580px;width:100%;animation:fadeUp .6s .22s ease both}
+.sug{padding:16px 18px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);cursor:pointer;text-align:left;transition:background .15s,border-color .15s,transform .15s;font-family:inherit}
+.sug:hover{background:var(--s1);border-color:var(--b2);transform:translateY(-2px)}
+.sugic{font-size:20px;margin-bottom:10px}
+.sugtx{font-size:13px;color:var(--t2);line-height:1.5}
+.msgs{padding:24px 0;display:none;flex-direction:column;max-width:800px;width:100%;margin:0 auto}
+.msgs.show{display:flex}
+.msg{padding:18px 28px;display:flex;gap:14px;animation:fadeUp .25s ease both}
+.msg:hover .macts{opacity:1}
+.av{width:32px;height:32px;border-radius:10px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.avu{border-radius:50%;background:linear-gradient(135deg,var(--prime),var(--prime2));color:#fff}
+.avcl{background:rgba(232,168,124,.12);color:var(--claude)}
+.avge{background:rgba(123,170,247,.12);color:var(--gemini)}
+.avgp{background:rgba(74,222,128,.12);color:var(--gpt)}
+.avse{background:rgba(192,132,252,.12);color:var(--search)}
+.mb{flex:1;min-width:0}
+.mmeta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mwho{font-size:13px;font-weight:600;color:var(--t2)}
+.mlbl{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.lcl{background:rgba(232,168,124,.12);color:var(--claude)}
+.lge{background:rgba(123,170,247,.12);color:var(--gemini)}
+.lgp{background:rgba(74,222,128,.12);color:var(--gpt)}
+.lse{background:rgba(192,132,252,.12);color:var(--search)}
+.mtime{font-size:11px;color:var(--t3);margin-left:auto}
+.mtext{font-size:14.5px;line-height:1.78;color:var(--t1)}
+.mtext p{margin-bottom:12px}
+.mtext p:last-child{margin-bottom:0}
+.mtext strong{font-weight:600}
+.mtext em{font-style:italic;color:var(--t2)}
+.mtext code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--s2);border:1px solid var(--b2);padding:2px 7px;border-radius:6px;color:var(--claude)}
+.mtext pre{background:var(--s1);border:1px solid var(--b2);border-radius:12px;padding:18px 20px;margin:12px 0;overflow-x:auto}
+.mtext pre code{background:none;border:none;padding:0;font-size:12.5px;color:#86efac;line-height:1.65}
+.mtext ul,.mtext ol{padding-left:24px;margin:10px 0}
+.mtext li{margin-bottom:6px}
+.mtext h1,.mtext h2,.mtext h3{font-family:'Lora',serif;margin:18px 0 8px;letter-spacing:-.02em}
+.mtext h1{font-size:22px}.mtext h2{font-size:18px}.mtext h3{font-size:15px}
+.mtext hr{border:none;border-top:1px solid var(--b1);margin:16px 0}
+.mtext a{color:var(--gemini);text-decoration:none;border-bottom:1px solid rgba(123,170,247,.3)}
+.mtext a:hover{border-color:var(--gemini)}
+.mtext blockquote{border-left:3px solid var(--prime);padding-left:14px;margin:10px 0;color:var(--t2);font-style:italic}
+.mtext table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+.mtext th{background:var(--s2);padding:8px 12px;border:1px solid var(--b2);text-align:left;font-weight:600}
+.mtext td{padding:7px 12px;border:1px solid var(--b1);color:var(--t2)}
+.macts{display:flex;gap:4px;margin-top:10px;opacity:0;transition:opacity .15s}
+.act{padding:4px 10px;border-radius:7px;border:none;background:transparent;color:var(--t3);font-family:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:background .12s,color .12s}
+.act:hover{background:var(--s2);color:var(--t2)}
+.thinking{padding:18px 28px;display:none;align-items:center;gap:14px;max-width:800px;width:100%;margin:0 auto}
+.thinking.show{display:flex}
+.thav{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.thlbl{font-size:13px;color:var(--t3);margin-bottom:5px}
+.dots{display:flex;gap:4px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:bnc 1.4s ease infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+
+/* ── INPUT ── */
+.ia{flex-shrink:0;padding:12px 20px 22px;background:linear-gradient(to top,var(--bg) 55%,transparent)}
+.chips{display:flex;gap:6px;margin-bottom:10px;max-width:800px;margin-left:auto;margin-right:auto;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--b1);background:transparent;color:var(--t3);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover{background:var(--s2);border-color:var(--b2);color:var(--t2)}
+.chip.on{border-color:var(--search);color:var(--search);background:rgba(192,132,252,.1)}
+.iw{max-width:800px;margin:0 auto;position:relative}
+.ibox{width:100%;background:var(--bg2);border:1px solid var(--b2);border-radius:16px;padding:15px 62px 15px 20px;font-family:inherit;font-size:14.5px;color:var(--t1);resize:none;outline:none;min-height:54px;max-height:220px;line-height:1.55;transition:border-color .2s,box-shadow .2s}
+.ibox::placeholder{color:var(--t4)}
+.ibox:focus{border-color:var(--b3);box-shadow:0 0 0 3px var(--glow)}
+.sbtn{position:absolute;right:10px;bottom:10px;width:36px;height:36px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--prime),var(--prime2));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .12s;box-shadow:0 2px 10px var(--glow)}
+.sbtn:hover{opacity:.9}.sbtn:active{transform:scale(.92)}
+.sbtn:disabled{background:var(--s2);color:var(--t4);box-shadow:none;cursor:default}
+.ifoot{max-width:800px;margin:8px auto 0;font-size:11.5px;color:var(--t3);text-align:center;display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* ── MODALS ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.ov.show{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:32px 36px;max-width:460px;width:90%;animation:slideUp .3s ease}
+.mh{font-family:'Lora',serif;font-size:22px;font-weight:600;letter-spacing:-.03em;margin-bottom:8px}
+.mp{font-size:13.5px;color:var(--t2);line-height:1.65;margin-bottom:6px}
+.mhint{font-size:12px;color:var(--t3);padding:10px 14px;background:var(--s1);border-radius:8px;line-height:1.6;margin-bottom:20px}
+.mlbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);margin-bottom:6px;display:block;margin-top:14px}
+.minp{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:10px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--t1);outline:none;margin-bottom:4px;transition:border-color .2s}
+.minp:focus{border-color:var(--prime)}
+.msec{font-size:11.5px;color:var(--t3);margin:12px 0 22px}
+.macts{display:flex;gap:10px;justify-content:flex-end}
+.btnp{padding:10px 22px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--prime),var(--prime2));color:#fff;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:opacity .15s;box-shadow:0 2px 10px var(--glow)}
+.btnp:hover{opacity:.9}
+.btns{padding:10px 22px;border-radius:10px;border:1px solid var(--b2);background:transparent;color:var(--t2);font-family:inherit;font-size:13.5px;cursor:pointer;transition:background .15s,color .15s}
+.btns:hover{background:var(--s2);color:var(--t1)}
+.pmod{background:var(--bg2);border:1px solid var(--b2);border-radius:20px;padding:32px;max-width:380px;width:90%;animation:slideUp .3s ease}
+.pav{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--prime),var(--prime2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 16px}
+.pname{font-family:'Lora',serif;font-size:22px;font-weight:600;text-align:center;letter-spacing:-.03em;margin-bottom:4px}
+.pemail{font-size:13px;color:var(--t2);text-align:center;margin-bottom:24px}
+.pstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.ps{background:var(--s1);border:1px solid var(--b1);border-radius:12px;padding:14px;text-align:center}
+.psn{font-family:'Lora',serif;font-size:22px;font-weight:600;color:var(--prime)}
+.psl{font-size:11px;color:var(--t3);margin-top:3px}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);padding:11px 20px;border-radius:12px;font-size:13.5px;z-index:999;animation:fadeUp .3s ease;max-width:92vw;text-align:center;display:flex;align-items:center;gap:8px;box-shadow:0 8px 28px rgba(0,0,0,.5);font-weight:500}
+.toast.ok{background:#052e16;border:1px solid #166534;color:#4ade80}
+.toast.err{background:#2d0a0a;border:1px solid #7f1d1d;color:#f87171}
+.toast.info{background:var(--s2);border:1px solid var(--b2);color:var(--t2)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+@media(max-width:640px){.sidebar{display:none}.sugs{grid-template-columns:1fr}.whead{font-size:24px}.fr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth">
+  <div class="aw">
+    <div class="al">
+      <div class="am"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <span class="aln">Prime<em>AI</em></span>
+    </div>
+    <div class="ac">
+      <div class="atabs">
+        <button class="atab on" id="tLogin" onclick="switchTab('login')">Sign In</button>
+        <button class="atab" id="tSignup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+      <div id="aerr" class="aerr"></div>
+      <!-- Login -->
+      <div id="loginForm">
+        <div class="fi"><label>Email</label><input type="email" id="lEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter') doLogin()"/></div>
+        <div class="fi"><label>Password</label><input type="password" id="lPass" placeholder="Your password" onkeydown="if(event.key==='Enter') doLogin()"/></div>
+        <button class="abtn" onclick="doLogin()">Sign In to Prime AI</button>
+        <div class="adiv">or</div>
+        <button class="abtn ghost" onclick="doGuest()">Continue as Guest</button>
+      </div>
+      <!-- Signup -->
+      <div id="signupForm" style="display:none">
+        <div class="fr">
+          <div class="fi"><label>First Name</label><input type="text" id="sFirst" placeholder="John"/></div>
+          <div class="fi"><label>Last Name</label><input type="text" id="sLast" placeholder="Doe"/></div>
+        </div>
+        <div class="fi"><label>Email</label><input type="email" id="sEmail" placeholder="you@example.com"/></div>
+        <div class="fi"><label>Password</label><input type="password" id="sPass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter') doSignup()"/></div>
+        <button class="abtn" onclick="doSignup()">Create Account</button>
+      </div>
+    </div>
+    <div class="astats">
+      <div class="asbox"><div class="asn">3</div><div class="asl">AI Models</div></div>
+      <div class="asbox"><div class="asn">&#8734;</div><div class="asl">Conversations</div></div>
+      <div class="asbox"><div class="asn">&#128269;</div><div class="asl">Web Search</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sbh">
+      <div class="sbb">
+        <div class="sbm"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <span class="sbn">Prime<em>AI</em></span>
+      </div>
+      <button class="ib" onclick="startNew()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <button class="nchat" onclick="startNew()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      New conversation
+    </button>
+    <div class="sbsec">Conversations</div>
+    <div class="clist" id="clist"></div>
+    <div class="sbfoot">
+      <div class="umenu" id="umenu">
+        <div class="mi" onclick="showProf()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          View Profile
+        </div>
+        <div class="mi" onclick="showKeys()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          API Keys
+        </div>
+        <div class="mdiv"></div>
+        <div class="mi danger" onclick="doLogout()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </div>
+      </div>
+      <div class="urow" onclick="toggleMenu()">
+        <div class="uav" id="sAv">P</div>
+        <div class="uinfo">
+          <div class="uname" id="sName">Prime User</div>
+          <div class="uemail" id="sEmail">guest@primeai.app</div>
+        </div>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--t3);flex-shrink:0"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="tbl">
+        <div class="ldot" id="ldot"></div>
+        <span class="tbtitle" id="tbt">Prime AI</span>
+      </div>
+      <div class="tbr">
+        <button class="kbtn" onclick="showKeys()" title="API Keys">&#128273;</button>
+        <button class="ib" onclick="startNew()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Model Tabs -->
+    <div class="mtabs">
+      <button class="mtab on" data-m="claude" onclick="setModel('claude')">Claude</button>
+      <button class="mtab" data-m="gemini" onclick="setModel('gemini')">Gemini</button>
+      <button class="mtab" data-m="chatgpt" onclick="setModel('chatgpt')">ChatGPT</button>
+      <button class="mtab" data-m="search" onclick="setModel('search')">Search</button>
+    </div>
+
+    <!-- Chat -->
+    <div class="ca" id="ca">
+      <div class="welcome" id="welcome">
+        <div class="wicon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h1 class="whead">Intelligence, <em>unified.</em></h1>
+        <p class="wsub">Switch between Claude, Gemini, and ChatGPT. Use Web Search for live answers. All conversations saved to your account.</p>
+        <div class="wchips">
+          <div class="wc wcc" onclick="setModel('claude')">Claude</div>
+          <div class="wc wcg" onclick="setModel('gemini')">Gemini</div>
+          <div class="wc wcp" onclick="setModel('chatgpt')">ChatGPT</div>
+          <div class="wc wcs" onclick="setModel('search')">Search</div>
+        </div>
+        <div class="sugs">
+          <button class="sug" onclick="qi('What are the differences between Claude, Gemini, and ChatGPT?')">
+            <div class="sugic">&#129302;</div><div class="sugtx">Compare Claude, Gemini and ChatGPT</div>
+          </button>
+          <button class="sug" onclick="doSS()">
+            <div class="sugic">&#128269;</div><div class="sugtx">Search for the latest AI news today</div>
+          </button>
+          <button class="sug" onclick="qi('Write a Python function using Sieve of Eratosthenes to find all primes up to N')">
+            <div class="sugic">&#128013;</div><div class="sugtx">Write an efficient Python algorithm</div>
+          </button>
+          <button class="sug" onclick="qi('Explain how large language models work in simple English')">
+            <div class="sugic">&#9883;</div><div class="sugtx">Explain how LLMs work</div>
+          </button>
+        </div>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <div class="thinking" id="thinking">
+        <div class="thav" id="thav"></div>
+        <div>
+          <div class="thlbl" id="thlbl">Thinking...</div>
+          <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="ia">
+      <div class="chips">
+        <button class="chip" id="schip" onclick="toggleSearch()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Web Search
+        </button>
+        <button class="chip" onclick="qi('Search the web for latest news about ')">&#127760; News</button>
+        <button class="chip" onclick="qi('Explain ')">&#128161; Explain</button>
+        <button class="chip" onclick="qi('Write code for ')">&#128187; Code</button>
+        <button class="chip" onclick="qi('Summarise ')">&#128196; Summarise</button>
+        <button class="chip" onclick="qi('Compare ')">&#9878; Compare</button>
+      </div>
+      <div class="iw">
+        <textarea class="ibox" id="ibox" placeholder="Ask anything..." rows="1"
+          onkeydown="handleKey(event)" oninput="onInp(this)"></textarea>
+        <button class="sbtn" id="sbtn" onclick="sendMsg()" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="ifoot">
+        <span style="opacity:.45">Prime AI</span>&middot;
+        <span id="ftxt">Demo mode &mdash; add API key for real responses</span>&middot;
+        <span style="opacity:.45">May be inaccurate</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- API Keys Modal -->
+<div class="ov" id="keyOv">
+  <div class="modal">
+    <div class="mh">&#128273; API Keys</div>
+    <div class="mp">Add your keys to unlock real AI responses and live web search.</div>
+    <div class="mhint">
+      <strong>Anthropic:</strong> <a href="https://console.anthropic.com" target="_blank" style="color:var(--prime)">console.anthropic.com</a> &rarr; API Keys<br>
+      <strong>Gemini:</strong> <a href="https://aistudio.google.com" target="_blank" style="color:var(--gemini)">aistudio.google.com</a> &rarr; Get API Key (free)
+    </div>
+    <label class="mlbl" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Anthropic Key <span id="adot" style="width:7px;height:7px;border-radius:50%;background:var(--b2);display:inline-block;margin-left:5px;vertical-align:middle"></span></span>
+      <button type="button" onclick="toggleVis('akey',this)" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:11px;padding:0">show</button>
+    </label>
+    <input class="minp" id="akey" type="password" placeholder="sk-ant-api03-..."/>
+    <label class="mlbl" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+      <span>Gemini Key <span id="gdot" style="width:7px;height:7px;border-radius:50%;background:var(--b2);display:inline-block;margin-left:5px;vertical-align:middle"></span></span>
+      <button type="button" onclick="toggleVis('gkey',this)" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:11px;padding:0">show</button>
+    </label>
+    <input class="minp" id="gkey" type="password" placeholder="AIzaSy..."/>
+    <label class="mlbl">NanoBanana Key — AI Image Generation &#127820;</label>
+    <input class="minp" id="nkey" type="password" placeholder="Your NanoBanana API key..."/>
+    <div style="font-size:11px;color:var(--t3);margin-top:4px">Get free key at <strong>nanobananaapi.ai</strong> — generate images from text prompts</div>
+    <div class="msec">&#128274; Keys stored in your browser only &middot; Never shared</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+      <button class="btns" onclick="clearAllKeys()" style="color:#f87171;border-color:rgba(239,68,68,.25);font-size:12px;padding:7px 14px">Clear All</button>
+      <div style="display:flex;gap:8px">
+        <button class="btns" onclick="hideKeys()">Cancel</button>
+        <button class="btnp" onclick="saveKeys()">Save Keys &#10003;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="ov" id="profOv">
+  <div class="pmod">
+    <div class="pav" id="pav">P</div>
+    <div class="pname" id="pname">Prime User</div>
+    <div class="pemail" id="pemail">guest@primeai.app</div>
+    <div class="pstats">
+      <div class="ps"><div class="psn" id="stC">0</div><div class="psl">Chats</div></div>
+      <div class="ps"><div class="psn" id="stM">0</div><div class="psl">Messages</div></div>
+      <div class="ps"><div class="psn" id="stD">1</div><div class="psl">Days</div></div>
+    </div>
+    <div class="macts" style="justify-content:space-between">
+      <button class="btns" style="color:#f87171;border-color:rgba(239,68,68,.3)" onclick="doLogout()">Sign Out</button>
+      <button class="btnp" onclick="hideProf()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STORAGE ───────────────────────────────────────────────
+var DB = {
+  get: function(k) {
+    try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; }
+  },
+  set: function(k, v) { localStorage.setItem(k, JSON.stringify(v)); },
+  del: function(k) { localStorage.removeItem(k); }
+};
+
+// ─── STATE ─────────────────────────────────────────────────
+var user = null;
+var anthKey = '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';
+var gemKey = 'AIzaSyDAQT_ogORUIbwmAwQAkdoE9GgZpdM-PXI';
+var model = 'claude';
+var searchOn = false;
+var sending = false;
+var chatId = null;
+var chatHistory = [];
+var chats = {};
+
+// ─── DOM HELPER ────────────────────────────────────────────
+function G(id) { return document.getElementById(id); }
+
+// ─── MODEL CONFIG ──────────────────────────────────────────
+var MODELS = {
+  claude:  { name:'Claude',  avCls:'avcl', avTx:'C',   lblCls:'lcl', ph:'Ask Claude anything...',  th:'Claude is thinking...'  },
+  gemini:  { name:'Gemini',  avCls:'avge', avTx:'G',   lblCls:'lge', ph:'Ask Gemini anything...',  th:'Gemini is thinking...'  },
+  chatgpt: { name:'ChatGPT', avCls:'avgp', avTx:'GPT', lblCls:'lgp', ph:'Ask ChatGPT anything...', th:'ChatGPT is thinking...' },
+  search:  { name:'Search',  avCls:'avse', avTx:'S',   lblCls:'lse', ph:'Search the web...',       th:'Searching the web...'   }
+};
+
+var SYS = {
+  claude:  'You are Claude, a helpful AI assistant by Anthropic. Be thoughtful and use markdown formatting.',
+  gemini:  'You are Gemini, Google AI assistant. Be comprehensive and data-driven. Use markdown. (Powered by Claude.)',
+  chatgpt: 'You are ChatGPT by OpenAI. Be clear and practical. Use markdown. (Powered by Claude.)',
+  search:  'You are a web search assistant. ALWAYS use the web_search tool before answering. Synthesise results clearly with markdown.'
+};
+
+var DEMO = {
+  claude: [
+    'I would be happy to help!\n\nAs **Claude**, I approach every problem thoughtfully.\n\n## My Approach\n\n- **Understand** the core question first\n- **Analyse** relevant context carefully\n- **Synthesise** a clear answer\n\n```python\ndef solve(problem):\n    return analyse(understand(problem))\n```\n\n> Add your Anthropic API key for real AI responses!'
+  ],
+  gemini: [
+    'Hello! As **Gemini** I excel at comprehensive analysis.\n\n| Perspective | Insight |\n|---|---|\n| Technical | Underlying mechanisms |\n| Practical | Real-world applications |\n\n*Add a Gemini API key for real responses.*'
+  ],
+  chatgpt: [
+    'Sure! As **ChatGPT** here is the direct answer:\n\n1. **Identify** what is being asked\n2. **Apply** the most relevant knowledge\n3. **Deliver** a clear, actionable response\n\n*(Demo mode — add API key for live responses)*'
+  ],
+  search: [
+    '## Web Search Results (Demo)\n\n**1. Wikipedia**\nComprehensive background on your topic.\n\n**2. Latest News**\nBreaking developments from the past few hours.\n\n**3. Expert Analysis**\nIn-depth technical analysis.\n\n*Add your Anthropic API key to enable real web search.*'
+  ]
+};
+
+// ─── HASH (simple password hashing) ───────────────────────
+function hash(s) {
+  var h = 0;
+  for (var i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i);
+    h = h | 0;
+  }
+  return h.toString(16);
+}
+
+// ─── AUTH TABS ─────────────────────────────────────────────
+function switchTab(t) {
+  G('tLogin').classList.toggle('on', t === 'login');
+  G('tSignup').classList.toggle('on', t === 'signup');
+  G('loginForm').style.display = t === 'login' ? '' : 'none';
+  G('signupForm').style.display = t === 'signup' ? '' : 'none';
+  G('aerr').classList.remove('show');
+}
+
+function showErr(m) {
+  G('aerr').textContent = m;
+  G('aerr').classList.add('show');
+}
+
+// ─── SIGN IN ───────────────────────────────────────────────
+function doLogin() {
+  var email = G('lEmail').value.trim().toLowerCase();
+  var pass  = G('lPass').value;
+  if (!email || !pass) { showErr('Please fill in all fields.'); return; }
+  var users = DB.get('pu') || {};
+  var found = null;
+  var keys = Object.keys(users);
+  for (var i = 0; i < keys.length; i++) {
+    if (users[keys[i]].email === email) { found = users[keys[i]]; break; }
+  }
+  if (!found || found.ph !== hash(pass)) { showErr('Invalid email or password.'); return; }
+  loginUser(found);
+}
+
+// ─── SIGN UP ───────────────────────────────────────────────
+function doSignup() {
+  var first = G('sFirst').value.trim();
+  var last  = G('sLast').value.trim();
+  var email = G('sEmail').value.trim().toLowerCase();
+  var pass  = G('sPass').value;
+  if (!first || !last || !email || !pass) { showErr('Please fill in all fields.'); return; }
+  if (pass.length < 6) { showErr('Password must be at least 6 characters.'); return; }
+  if (email.indexOf('@') === -1) { showErr('Please enter a valid email.'); return; }
+  var users = DB.get('pu') || {};
+  var keys = Object.keys(users);
+  for (var i = 0; i < keys.length; i++) {
+    if (users[keys[i]].email === email) { showErr('Account already exists with this email.'); return; }
+  }
+  var u = { id: 'u_' + Date.now(), firstName: first, lastName: last, email: email, ph: hash(pass), createdAt: new Date().toISOString() };
+  users[u.id] = u;
+  DB.set('pu', users);
+  loginUser(u);
+}
+
+// ─── GUEST ─────────────────────────────────────────────────
+function doGuest() {
+  var g = { id: 'guest', firstName: 'Guest', lastName: 'User', email: 'guest@primeai.app', createdAt: DB.get('guestCreated') || new Date().toISOString() };
+  DB.set('guestCreated', g.createdAt);
+  loginUser(g);
+}
+
+// ─── LOGIN USER ────────────────────────────────────────────
+function loginUser(u) {
+  user = u;
+  DB.set('ps', u.id);
+  chats = DB.get('pc_' + u.id) || {};
+  var ak = DB.get('ak_' + u.id) || '';
+  var gk = DB.get('gk_' + u.id) || '';
+  var nk = DB.get('nk_' + u.id) || '';
+  if (ak) anthKey = ak;
+  if (gk) gemKey  = gk;
+  if (nk) nanoKey = nk;
+  var init = (u.firstName[0] + (u.lastName[0] || '')).toUpperCase();
+  G('sAv').textContent   = init;
+  G('sName').textContent = u.firstName + ' ' + u.lastName;
+  G('sEmail').textContent = u.email;
+  G('auth').style.display = 'none';
+  G('app').classList.add('show');
+  renderList();
+  startNew();
+  updateStatus();
+  toast('Welcome, ' + u.firstName + '!', 'ok');
+}
+
+// ─── LOGOUT ────────────────────────────────────────────────
+function doLogout() {
+  DB.del('ps');
+  user = null; anthKey = ''; gemKey = '';
+  chats = {}; chatHistory = []; chatId = null;
+  G('umenu').classList.remove('show');
+  G('profOv').classList.remove('show');
+  G('app').classList.remove('show');
+  G('auth').style.display = 'flex';
+  G('lEmail').value = '';
+  G('lPass').value  = '';
+  toast('Signed out', 'info');
+}
+
+// ─── NEW CHAT ──────────────────────────────────────────────
+function startNew() {
+  chatId  = 'c_' + Date.now();
+  chatHistory = [];
+  var c = { id: chatId, title: 'New conversation', model: model, messages: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  chats[chatId] = c;
+  saveChats();
+  G('msgs').innerHTML = '';
+  G('msgs').classList.remove('show');
+  G('welcome').style.display = '';
+  G('thinking').classList.remove('show');
+  sending = false;
+  G('ibox').value = '';
+  G('ibox').style.height = 'auto';
+  G('sbtn').disabled = true;
+  G('umenu').classList.remove('show');
+  renderList();
+}
+
+// ─── LOAD CHAT ─────────────────────────────────────────────
+function loadChat(cid) {
+  var c = chats[cid];
+  if (!c) return;
+  chatId  = cid;
+  chatHistory = [];
+  for (var i = 0; i < c.messages.length; i++) {
+    chatHistory.push({ role: c.messages[i].role, content: c.messages[i].content });
+  }
+  G('msgs').innerHTML = '';
+  if (c.messages.length > 0) {
+    G('welcome').style.display = 'none';
+    G('msgs').classList.add('show');
+    for (var j = 0; j < c.messages.length; j++) {
+      var m = c.messages[j];
+      if (m.role === 'user') addUserDOM(m.content, m.time);
+      else addAiDOM(m.model || c.model, m.content, m.time);
+    }
+    scrollBot();
+  } else {
+    G('welcome').style.display = '';
+    G('msgs').classList.remove('show');
+  }
+  setModel(c.model || 'claude', false);
+  renderList();
+}
+
+// ─── DELETE CHAT ───────────────────────────────────────────
+function delChat(cid, e) {
+  e.stopPropagation();
+  delete chats[cid];
+  saveChats();
+  if (chatId === cid) startNew();
+  else renderList();
+}
+
+// ─── SAVE CHATS ────────────────────────────────────────────
+function saveChats() {
+  if (user) DB.set('pc_' + user.id, chats);
+}
+
+// ─── SET CHAT TITLE ────────────────────────────────────────
+function setChatTitle(txt) {
+  if (!chats[chatId]) return;
+  if (chats[chatId].title === 'New conversation') {
+    chats[chatId].title = txt.length > 40 ? txt.slice(0, 40) + '...' : txt;
+  }
+  chats[chatId].updatedAt = new Date().toISOString();
+  saveChats();
+  renderList();
+}
+
+// ─── RENDER SIDEBAR LIST ───────────────────────────────────
+function renderList() {
+  var list = G('clist');
+  list.innerHTML = '';
+  var arr = Object.values(chats).sort(function(a, b) { return new Date(b.updatedAt) - new Date(a.updatedAt); });
+  if (!arr.length) {
+    list.innerHTML = '<div style="padding:14px 10px;font-size:12.5px;color:var(--t3);text-align:center">No conversations yet</div>';
+    return;
+  }
+  for (var i = 0; i < arr.length; i++) {
+    (function(c) {
+      var d = document.createElement('div');
+      d.className = 'ce' + (c.id === chatId ? ' active' : '');
+      d.innerHTML =
+        '<span class="cedot"></span>' +
+        '<span class="cetxt">' + esc(c.title) + '</span>' +
+        '<span class="cetime">' + relTime(c.updatedAt) + '</span>' +
+        '<button class="cedel">&#x2715;</button>';
+      d.querySelector('.cedel').addEventListener('click', function(e) { delChat(c.id, e); });
+      d.addEventListener('click', function() { loadChat(c.id); });
+      list.appendChild(d);
+    })(arr[i]);
+  }
+}
+
+// ─── SET MODEL ─────────────────────────────────────────────
+function setModel(m, save) {
+  if (save === undefined) save = true;
+  model = m;
+  var tabs = document.querySelectorAll('.mtab');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('on');
+  document.querySelector('[data-m="' + m + '"]').classList.add('on');
+  G('ibox').placeholder = MODELS[m].ph;
+  G('tbt').textContent  = MODELS[m].name;
+  if (m === 'search' && !searchOn) toggleSearch();
+  else if (m !== 'search' && searchOn) toggleSearch();
+  updateFooter();
+  if (save && chatId && chats[chatId]) { chats[chatId].model = m; saveChats(); }
+}
+
+// ─── TOGGLE SEARCH ─────────────────────────────────────────
+function toggleSearch() {
+  searchOn = !searchOn;
+  G('schip').classList.toggle('on', searchOn);
+}
+
+// ─── STATUS ────────────────────────────────────────────────
+function updateStatus() {
+  var on = !!(anthKey || gemKey);
+  G('ldot').classList.toggle('on', on);
+  updateFooter();
+}
+
+function updateFooter() {
+  var on = !!(anthKey || gemKey);
+  G('ftxt').textContent = on ? 'Live AI active — Web Search ready' : 'Demo mode — add API key for real responses';
+}
+
+// ─── INPUT ─────────────────────────────────────────────────
+G('ibox').addEventListener('input', function() {
+  G('sbtn').disabled = !G('ibox').value.trim() || sending;
+});
+
+function onInp(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 220) + 'px';
+  G('sbtn').disabled = !el.value.trim() || sending;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!G('sbtn').disabled) sendMsg();
+  }
+}
+
+function qi(t) {
+  G('ibox').value = t;
+  G('sbtn').disabled = false;
+  G('ibox').focus();
+  onInp(G('ibox'));
+}
+
+function doSS() {
+  setModel('search');
+  qi('What are the latest AI developments and news today?');
+}
+
+// ─── SEND MESSAGE ──────────────────────────────────────────
+function sendMsg() {
+  if (sending) return;
+  var text = G('ibox').value.trim();
+  if (!text) return;
+  sending = true;
+  G('sbtn').disabled = true;
+  if (G('welcome').style.display !== 'none') {
+    G('welcome').style.display = 'none';
+    G('msgs').classList.add('show');
+  }
+  var t = nowTime();
+  addUserDOM(text, t);
+  chatHistory.push({ role: 'user', content: text });
+  if (chats[chatId]) {
+    chats[chatId].messages.push({ role: 'user', content: text, time: t });
+    setChatTitle(text);
+  }
+  G('ibox').value = '';
+  G('ibox').style.height = 'auto';
+  var cfg = MODELS[model];
+  G('thlbl').textContent = cfg.th;
+  G('thav').className    = 'thav ' + cfg.avCls;
+  G('thav').textContent  = cfg.avTx;
+  G('thinking').classList.add('show');
+  scrollBot();
+  callAI().then(function(reply) {
+    G('thinking').classList.remove('show');
+    var rt = nowTime();
+    addAiDOM(model, reply, rt);
+    chatHistory.push({ role: 'assistant', content: reply });
+    if (chats[chatId]) {
+      chats[chatId].messages.push({ role: 'assistant', content: reply, time: rt, model: model });
+      chats[chatId].updatedAt = new Date().toISOString();
+      saveChats();
+    }
+    scrollBot();
+    sending = false;
+    G('sbtn').disabled = !G('ibox').value.trim();
+  }).catch(function(err) {
+    G('thinking').classList.remove('show');
+    addAiDOM(model, '**Error:** ' + err.message + '\n\nCheck your API keys and try again.', nowTime());
+    scrollBot();
+    sending = false;
+    G('sbtn').disabled = !G('ibox').value.trim();
+  });
+}
+
+// ─── CALL AI ───────────────────────────────────────────────
+function callAI() {
+  if (model === 'gemini' && gemKey) return callGemini();
+  if (model === 'gemini' && !gemKey && anthKey) return callAnthropic();
+  if (anthKey) return callAnthropic();
+  return new Promise(function(resolve) {
+    setTimeout(function() {
+      var pool = DEMO[model] || DEMO['claude'];
+      resolve(pool[Math.floor(Math.random() * pool.length)]);
+    }, 900 + Math.random() * 600);
+  });
+}
+
+
+// ─── ANTHROPIC API ─────────────────────────────────────────
+function callAnthropic() {
+  var useSearch = searchOn || model === 'search';
+  var body = { model: 'claude-sonnet-4-20250514', max_tokens: 2048, system: SYS[model] || SYS.claude, messages: chatHistory };
+  if (useSearch) body.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': anthKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  }).then(function(res) {
+    if (!res.ok) return res.json().then(function(e) { throw new Error((e.error && e.error.message) || 'HTTP ' + res.status); });
+    return res.json();
+  }).then(function(d) {
+    return d.content.filter(function(b) { return b.type === 'text'; }).map(function(b) { return b.text; }).join('\n\n') || '*(No response)*';
+  });
+}
+
+// ─── GEMINI API ────────────────────────────────────────────
+function callGemini() {
+  var models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
+  var contents = [];
+  contents.push({ role: 'user', parts: [{ text: 'You are Gemini, Google AI assistant. Be comprehensive and helpful. Use markdown formatting.' }] });
+  contents.push({ role: 'model', parts: [{ text: 'Understood! I am Gemini, ready to help.' }] });
+  for (var i = 0; i < chatHistory.length; i++) {
+    var m = chatHistory[i];
+    contents.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] });
+  }
+  function tryModel(idx) {
+    if (idx >= models.length) return Promise.reject(new Error('Gemini API failed. Check your Gemini key at aistudio.google.com'));
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[idx] + ':generateContent?key=' + gemKey;
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7 } })
+    }).then(function(res) {
+      return res.json().then(function(d) {
+        if (!res.ok) {
+          if (res.status === 404 || res.status === 400) return tryModel(idx + 1);
+          throw new Error('Gemini: ' + ((d.error && d.error.message) || 'HTTP ' + res.status));
+        }
+        return d;
+      });
+    }).then(function(d) {
+      if (!d.candidates || !d.candidates[0]) return tryModel(idx + 1);
+      var txt = d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] && d.candidates[0].content.parts[0].text;
+      return txt || '*(No response)*';
+    });
+  }
+  return tryModel(0);
+}
+
+// ─── ADD USER MESSAGE ──────────────────────────────────────
+function addUserDOM(text, time) {
+  var d = document.createElement('div');
+  d.className = 'msg';
+  var init  = user ? (user.firstName[0] + (user.lastName[0] || '')).toUpperCase() : 'P';
+  var uname = user ? user.firstName : 'You';
+  d.innerHTML =
+    '<div class="av avu">' + init + '</div>' +
+    '<div class="mb">' +
+      '<div class="mmeta"><span class="mwho">' + esc(uname) + '</span><span class="mtime">' + (time || '') + '</span></div>' +
+      '<div class="mtext"><p>' + esc(text) + '</p></div>' +
+    '</div>';
+  G('msgs').appendChild(d);
+}
+
+// ─── ADD AI MESSAGE ────────────────────────────────────────
+function addAiDOM(m, text, time) {
+  var cfg = MODELS[m] || MODELS.claude;
+  var d = document.createElement('div');
+  d.className = 'msg';
+  var copyBtn = document.createElement('button');
+  copyBtn.className = 'act';
+  copyBtn.textContent = 'Copy';
+  copyBtn.addEventListener('click', function() { cpTxt(copyBtn, text); });
+  var innerHtml =
+    '<div class="av ' + cfg.avCls + '">' + cfg.avTx + '</div>' +
+    '<div class="mb">' +
+      '<div class="mmeta"><span class="mwho">' + cfg.name + '</span><span class="mlbl ' + cfg.lblCls + '">' + cfg.name + '</span><span class="mtime">' + (time || '') + '</span></div>' +
+      '<div class="mtext">' + renderMD(text) + '</div>' +
+      '<div class="macts"></div>' +
+    '</div>';
+  d.innerHTML = innerHtml;
+  var acts = d.querySelector('.macts');
+  acts.appendChild(copyBtn);
+  var likeBtn = document.createElement('button');
+  likeBtn.className = 'act';
+  likeBtn.textContent = '👍';
+  acts.appendChild(likeBtn);
+  var dislikeBtn = document.createElement('button');
+  dislikeBtn.className = 'act';
+  dislikeBtn.textContent = '👎';
+  acts.appendChild(dislikeBtn);
+  G('msgs').appendChild(d);
+}
+
+// ─── MARKDOWN RENDERER ─────────────────────────────────────
+function renderMD(t) {
+  var s = esc(t);
+  // code blocks
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, function(_, code) {
+    return '<pre><code>' + code.replace(/\n$/, '') + '</code></pre>';
+  });
+  // inline code
+  s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // headings
+  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.+)$/gm,  '<h2>$1</h2>');
+  s = s.replace(/^# (.+)$/gm,   '<h1>$1</h1>');
+  // bold/italic
+  s = s.replace(/\*\*\*([^*\n]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*([^*\n]+)\*\*/g,     '<strong>$1</strong>');
+  s = s.replace(/\*([^*\n]+)\*/g,         '<em>$1</em>');
+  // blockquote
+  s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+  // hr
+  s = s.replace(/^---+$/gm, '<hr>');
+  // lists
+  s = s.replace(/^[*-] (.+)$/gm,   '<li>$1</li>');
+  s = s.replace(/^\d+\. (.+)$/gm,  '<li>$1</li>');
+  s = s.replace(/((<li>.*?<\/li>\n?)+)/gs, '<ul>$1</ul>');
+  // images (before links)
+  s = s.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:12px;margin:10px 0;display:block" onerror="this.style.display=none">');
+  // links
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // paragraphs
+  var parts = s.split(/\n{2,}/);
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var chunk = parts[i].trim();
+    if (!chunk) continue;
+    if (/^<(pre|ul|ol|h[1-3]|hr|blockquote|table)/.test(chunk)) out.push(chunk);
+    else out.push('<p>' + chunk.replace(/\n/g, '<br>') + '</p>');
+  }
+  return out.join('');
+}
+
+function esc(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ─── COPY ──────────────────────────────────────────────────
+function cpTxt(btn, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = orig; }, 1800);
+  });
+}
+
+// ─── API KEYS MODAL ────────────────────────────────────────
+// ─── PROFILE MODAL ─────────────────────────────────────────
+function showProf() {
+  if (!user) return;
+  G('pav').textContent   = (user.firstName[0] + (user.lastName[0] || '')).toUpperCase();
+  G('pname').textContent  = user.firstName + ' ' + user.lastName;
+  G('pemail').textContent = user.email;
+  var cs = Object.values(chats);
+  G('stC').textContent = cs.length;
+  var totalMsgs = 0;
+  for (var i = 0; i < cs.length; i++) totalMsgs += cs[i].messages.length;
+  G('stM').textContent = totalMsgs;
+  G('stD').textContent = Math.max(1, Math.ceil((Date.now() - new Date(user.createdAt)) / 86400000));
+  G('profOv').classList.add('show');
+  G('umenu').classList.remove('show');
+}
+function hideProf() { G('profOv').classList.remove('show'); }
+
+// ─── USER MENU ─────────────────────────────────────────────
+function toggleMenu() { G('umenu').classList.toggle('show'); }
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.sbfoot')) G('umenu').classList.remove('show');
+});
+['keyOv', 'profOv'].forEach(function(id) {
+  G(id).addEventListener('click', function(e) {
+    if (e.target === e.currentTarget) G(id).classList.remove('show');
+  });
+});
+
+// ─── UTILS ─────────────────────────────────────────────────
+function scrollBot() { setTimeout(function() { G('ca').scrollTop = G('ca').scrollHeight; }, 60); }
+function nowTime() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+function relTime(iso) {
+  var d = (Date.now() - new Date(iso)) / 1000;
+  if (d < 60) return 'now';
+  if (d < 3600) return Math.floor(d / 60) + 'm';
+  if (d < 86400) return Math.floor(d / 3600) + 'h';
+  return Math.floor(d / 86400) + 'd';
+}
+function toast(msg, type) {
+  type = type || 'info';
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(10px)'; }, 2800);
+  setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 3200);
+}
+
+
+// ─── KEY HELPERS ─────────────────────────────────────────────
+function toggleVis(id, btn) {
+  try {
+    var el = G(id);
+    if (!el) return;
+    el.type = (el.type === 'password') ? 'text' : 'password';
+    if (btn) btn.textContent = (el.type === 'password') ? 'show' : 'hide';
+  } catch(e) { console.warn('toggleVis:', e); }
+}
+
+function clearAllKeys() {
+  try {
+    anthKey = ''; gemKey = '';
+    var uid = (user && user.id) ? user.id : 'guest';
+    DB.del('ak_' + uid); DB.del('gk_' + uid);
+    var akey = G('akey'); if (akey) akey.value = '';
+    var gkey = G('gkey'); if (gkey) gkey.value = '';
+    var adot = G('adot'); if (adot) adot.style.background = 'var(--b2)';
+    var gdot = G('gdot'); if (gdot) gdot.style.background = 'var(--b2)';
+    updateStatus();
+    toast('All keys cleared', 'info');
+  } catch(e) { console.warn('clearAllKeys:', e); }
+}
+
+function showKeys() {
+  try {
+    var akey = G('akey'); if (akey) akey.value = anthKey || '';
+    var gkey = G('gkey'); if (gkey) gkey.value = gemKey  || '';
+    var adot = G('adot'); if (adot) adot.style.background = anthKey ? '#22c55e' : 'var(--b2)';
+    var gdot = G('gdot'); if (gdot) gdot.style.background = gemKey  ? '#22c55e' : 'var(--b2)';
+    var keyOv = G('keyOv'); if (keyOv) keyOv.classList.add('show');
+    var umenu = G('umenu'); if (umenu) umenu.classList.remove('show');
+  } catch(e) { console.warn('showKeys:', e); }
+}
+
+function hideKeys() {
+  try { var el = G('keyOv'); if (el) el.classList.remove('show'); } catch(e) {}
+}
+
+function saveKeys() {
+  try {
+    var a = G('akey') ? G('akey').value.trim() : '';
+    var g = G('gkey') ? G('gkey').value.trim() : '';
+    if (a) anthKey = a;
+    if (g) gemKey  = g;
+    var uid = (user && user.id) ? user.id : 'guest';
+    if (a) DB.set('ak_' + uid, a);
+    if (g) DB.set('gk_' + uid, g);
+    hideKeys();
+    updateStatus();
+    var saved = [];
+    if (a) saved.push('Anthropic');
+    if (g) saved.push('Gemini');
+    toast(saved.length ? 'Saved: ' + saved.join(', ') + ' ✓' : 'No keys entered', saved.length ? 'ok' : 'info');
+  } catch(e) {
+    console.warn('saveKeys error:', e);
+    toast('Error saving keys', 'err');
+  }
+}
+
+// ─── INIT: runs after ALL functions are defined ────────────
+// Using window.load (not DOMContentLoaded) so every function
+// declared below this point is guaranteed to exist first.
+window.addEventListener('load', function() {
+
+  // Attach input listeners safely
+  var ibox = G('ibox');
+  if (ibox) {
+    ibox.addEventListener('input', function() {
+      try {
+        var sb = G('sbtn');
+        if (sb) sb.disabled = !ibox.value.trim() || sending;
+      } catch(e) {}
+    });
+  }
+
+  // Overlay close on background click
+  ['keyOv', 'profOv'].forEach(function(id) {
+    var el = G(id);
+    if (el) {
+      el.addEventListener('click', function(e) {
+        if (e.target === e.currentTarget) {
+          el.classList.remove('show');
+        }
+      });
+    }
+  });
+
+  // Close user menu on outside click
+  document.addEventListener('click', function(e) {
+    try {
+      if (e.target && !e.target.closest('.sbfoot')) {
+        var um = G('umenu');
+        if (um) um.classList.remove('show');
+      }
+    } catch(e2) {}
+  });
+
+  // Auto-login: all functions exist at this point
+  try {
+    var sid = DB.get('ps');
+    if (!sid) {
+      var a = G('auth');
+      if (a) a.style.display = 'flex';
+      return;
+    }
+    if (sid === 'guest') {
+      doGuest();   // safe — doGuest is defined above
+      return;
+    }
+    var users = DB.get('pu') || {};
+    var u = users[sid];
+    if (u) {
+      loginUser(u);  // safe — loginUser is defined above
+      return;
+    }
+    var a2 = G('auth');
+    if (a2) a2.style.display = 'flex';
+  } catch(e) {
+    console.warn('Prime AI auto-login error:', e);
+    try { var a3 = G('auth'); if (a3) a3.style.display = 'flex'; } catch(e2) {}
+  }
+
+});
+</script>
+</body>
+</html>
