@@ -1,3 +1,4 @@
+if (typeof window !== 'undefined') {
 window.addEventListener('load', () => {
     const tl = gsap.timeline();
 
@@ -34,3 +35,4 @@ const observer = new IntersectionObserver((entries) => {
 }, observerOptions);
 
 document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+}
